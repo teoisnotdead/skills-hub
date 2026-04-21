@@ -1,0 +1,174 @@
+<div class="min-h-screen bg-background text-foreground flex flex-col">
+
+  <!-- Header -->
+  <header class="border-b border-border/50 bg-card/60 backdrop-blur-sm sticky top-0 z-10">
+    <div class="mx-auto max-w-4xl px-6 py-4 flex items-center gap-4">
+      <button
+        (click)="goBack()"
+        class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Volver
+      </button>
+      <div class="h-4 w-px bg-border/50"></div>
+      <div class="flex items-center gap-2.5">
+        <div class="flex h-6 w-6 items-center justify-center rounded-md bg-primary">
+          <svg class="h-3 w-3 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+        <span class="text-sm font-medium text-muted-foreground">Chapter Skills</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 mx-auto w-full max-w-4xl px-6 py-8 space-y-6">
+
+    @if (facade.loading()) {
+
+      <!-- Skeleton -->
+      <div class="rounded-xl border border-border/40 bg-card/50 p-6 animate-pulse">
+        <div class="flex items-start gap-5">
+          <div class="h-14 w-14 rounded-full bg-muted/50 shrink-0"></div>
+          <div class="flex-1 space-y-3 pt-1">
+            <div class="h-5 w-48 rounded bg-muted/50"></div>
+            <div class="h-3.5 w-32 rounded bg-muted/30"></div>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-4">
+        @for (_ of [1, 2]; track $index) {
+          <div class="animate-pulse space-y-3">
+            <div class="h-3.5 w-24 rounded bg-muted/40"></div>
+            <div class="flex flex-wrap gap-2">
+              @for (__ of [1,2,3,4,5,6]; track $index) {
+                <div class="h-7 w-24 rounded-lg bg-muted/30"></div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+    } @else if (facade.notFound()) {
+
+      <div class="flex flex-col items-center justify-center py-24 text-muted-foreground">
+        <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted/20">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <p class="text-sm font-medium">Developer no encontrado</p>
+      </div>
+
+    } @else {
+
+      @let dev = facade.developer()!;
+      @let stats = facade.stats();
+
+      <!-- Perfil del developer -->
+      <div class="rounded-xl border border-border/40 bg-card/50 p-6">
+        <div class="flex items-start gap-5">
+          <div
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-xl font-bold text-white/90 select-none"
+            [style.background]="avatarGradient(dev.name)"
+          >
+            {{ dev.name.charAt(0).toUpperCase() }}
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <h1 class="text-xl font-semibold leading-tight">{{ dev.name }}</h1>
+
+            <div class="flex flex-wrap items-center gap-3 mt-2">
+              <span
+                class="tabular-nums text-[11px] font-medium tracking-tight"
+                [class]="dev.mlLevel ? 'text-muted-foreground/70' : 'text-muted-foreground/30'"
+                style="font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, monospace"
+              >ML:{{ dev.mlLevel ?? '—' }}</span>
+
+              <span class="text-xs text-muted-foreground/50">·</span>
+              <span class="text-xs text-muted-foreground">{{ stats.total }} skills</span>
+
+              @if (stats.priority > 0) {
+                <span class="text-xs text-muted-foreground/50">·</span>
+                <span class="text-xs text-muted-foreground">
+                  <span class="text-[10px] mr-0.5">★</span>{{ stats.priority }} prioritaria{{ stats.priority !== 1 ? 's' : '' }}
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skills por nivel -->
+      @if (facade.skillsByLevel().length === 0) {
+        <p class="text-sm text-muted-foreground/50 text-center py-8">Sin skills registradas</p>
+      } @else {
+        <div class="space-y-6">
+          @for (group of facade.skillsByLevel(); track group.level.id) {
+
+            <div>
+              <!-- Cabecera del grupo -->
+              <div class="flex items-center gap-2.5 mb-3">
+                <div
+                  class="h-2 w-2 rounded-full shrink-0"
+                  [style.background-color]="group.level.color"
+                ></div>
+                <h2 class="text-xs font-semibold uppercase tracking-widest"
+                    [style.color]="group.level.color">
+                  {{ group.level.name }}
+                </h2>
+                <span class="text-[11px] text-muted-foreground/50 tabular-nums">{{ group.skills.length }}</span>
+                <div class="flex-1 h-px bg-border/30"></div>
+                @if (group.priorityCount > 0) {
+                  <span class="text-[10px] text-muted-foreground/40">★ {{ group.priorityCount }}</span>
+                }
+              </div>
+
+              <!-- Badges de skills -->
+              <div class="flex flex-wrap gap-2">
+                @for (ds of group.skills; track ds.id) {
+                  <span
+                    class="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs leading-none transition-opacity duration-150 hover:opacity-80"
+                    [class]="ds.skill.priority ? 'font-semibold' : 'font-medium'"
+                    [style.background-color]="ds.level.color + (ds.skill.priority ? '22' : '12')"
+                    [style.color]="ds.level.color"
+                    [style.border]="'1px solid ' + ds.level.color + (ds.skill.priority ? '40' : '22')"
+                    [title]="ds.skill.priority ? 'Prioritaria' : ''"
+                  >
+                    @if (ds.skill.priority) {
+                      <span class="text-[9px]">★</span>
+                    }
+                    {{ ds.skill.name }}
+                  </span>
+                }
+              </div>
+            </div>
+
+          }
+        </div>
+      }
+
+    }
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-border/20 py-4 mt-8">
+    <div class="mx-auto max-w-4xl px-6 flex items-center justify-between gap-4 flex-wrap"
+         style="font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, monospace">
+      <div class="flex items-center gap-2.5 text-[11px] text-muted-foreground/35 select-none">
+        <span class="text-muted-foreground/20 text-base leading-none">›</span>
+        <span>Accenture Chile</span>
+        <span class="text-muted-foreground/15">/</span>
+        <span>Frontend JavaScript</span>
+        <span class="text-muted-foreground/15">/</span>
+        <span>Matriz de Competencias</span>
+      </div>
+      <span class="text-[11px] text-muted-foreground/20 tabular-nums">© {{ currentYear }} Accenture</span>
+    </div>
+  </footer>
+
+</div>

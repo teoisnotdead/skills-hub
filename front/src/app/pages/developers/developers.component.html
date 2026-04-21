@@ -1,0 +1,253 @@
+<div class="min-h-screen bg-background text-foreground flex flex-col">
+
+  <!-- Header -->
+  <header class="border-b border-border/50 bg-card/60 backdrop-blur-sm sticky top-0 z-10">
+    <div class="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <svg class="h-4 w-4 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-base font-semibold leading-none">Chapter Skills</h1>
+          <p class="text-xs text-muted-foreground mt-0.5">Frontend Javascript</p>
+        </div>
+      </div>
+      @if (facade.total() > 0) {
+        <span class="text-xs text-muted-foreground tabular-nums">
+          {{ facade.total() }} developer{{ facade.total() !== 1 ? 's' : '' }}
+        </span>
+      }
+    </div>
+  </header>
+
+  <main class="flex-1 mx-auto w-full max-w-7xl px-6 py-6 space-y-5">
+
+    <!-- Filtros -->
+    <div class="rounded-xl border border-border/50 bg-card/40 p-4 backdrop-blur-sm">
+      <div class="flex flex-wrap gap-3 items-end">
+
+        <div class="flex flex-col gap-1.5 min-w-45 flex-1">
+          <label class="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Developer</label>
+          <input
+            [ngModel]="facade.nameFilter()"
+            (ngModelChange)="facade.nameFilter.set($event)"
+            (input.debounce.300)="facade.applyFilters()"
+            type="text"
+            placeholder="Buscar por nombre..."
+            class="h-8 w-full rounded-lg border border-border/60 bg-background/50 px-3 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring transition-colors"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1.5 min-w-45 flex-1">
+          <label class="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Skill</label>
+          <input
+            [ngModel]="facade.skillFilter()"
+            (ngModelChange)="facade.skillFilter.set($event)"
+            (input.debounce.300)="facade.applyFilters()"
+            type="text"
+            placeholder="Angular, React, TypeScript..."
+            class="h-8 w-full rounded-lg border border-border/60 bg-background/50 px-3 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring transition-colors"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1.5 min-w-35">
+          <label class="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Nivel</label>
+          <select
+            [ngModel]="facade.levelFilter()"
+            (ngModelChange)="facade.setLevelFilter($event)"
+            class="h-8 w-full rounded-lg border border-border/60 bg-background/50 px-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring transition-colors"
+          >
+            <option value="">Todos los niveles</option>
+            @for (level of facade.levels(); track level.id) {
+              <option [value]="level.name">{{ level.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="flex flex-col gap-1.5 min-w-27.5">
+          <label class="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">ML Level</label>
+          <input
+            [ngModel]="facade.mlLevelFilter()"
+            (ngModelChange)="facade.mlLevelFilter.set($event)"
+            (input.debounce.300)="facade.applyFilters()"
+            type="text"
+            placeholder="11, 12..."
+            class="h-8 w-full rounded-lg border border-border/60 bg-background/50 px-3 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring transition-colors"
+          />
+        </div>
+
+        <div class="flex gap-2 items-end">
+          <button
+            z-button
+            zSize="sm"
+            [zType]="facade.priorityFilter() ? 'default' : 'outline'"
+            (click)="facade.togglePriority()"
+            title="Mostrar solo developers con skills prioritarias"
+          >
+            ★ Prioritarias
+          </button>
+          <button z-button zSize="sm" (click)="facade.applyFilters()">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Buscar
+          </button>
+          @if (facade.hasActiveFilters()) {
+            <button z-button zSize="sm" zType="outline" (click)="facade.clearFilters()">Limpiar</button>
+          }
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Loading skeleton -->
+    @if (facade.loading()) {
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        @for (_ of [1,2,3,4,5,6,7,8,9,10]; track $index) {
+          <div class="rounded-xl border border-border/30 bg-card/40 p-5 animate-pulse flex flex-col gap-3">
+            <div class="flex items-center gap-2.5">
+              <div class="h-7 w-7 rounded-full bg-muted/50 shrink-0"></div>
+              <div class="flex-1 h-3.5 rounded bg-muted/50"></div>
+              <div class="h-3 w-8 rounded bg-muted/30"></div>
+            </div>
+            <div class="flex gap-1.5">
+              <div class="h-5 w-16 rounded bg-muted/30"></div>
+              <div class="h-5 w-14 rounded bg-muted/30"></div>
+              <div class="h-5 w-10 rounded bg-muted/30"></div>
+            </div>
+            <div class="h-0.75 rounded-full bg-muted/30 mt-auto"></div>
+          </div>
+        }
+      </div>
+
+    <!-- Sin resultados -->
+    } @else if (facade.developers().length === 0) {
+      <div class="flex flex-col items-center justify-center py-24 text-muted-foreground">
+        <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted/20">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <p class="text-sm font-medium">Sin resultados</p>
+        <p class="text-xs mt-1 text-muted-foreground/60">Prueba ajustando los filtros</p>
+      </div>
+
+    <!-- Grid de developers -->
+    } @else {
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        @for (dev of facade.developers(); track dev.id; let i = $index) {
+
+          <div
+            class="card-entry group relative rounded-xl border border-border/40 bg-card/50 p-5 flex flex-col gap-3 hover:border-border/70 hover:bg-card/80 transition-all duration-200 overflow-hidden cursor-pointer"
+            [style.animation-delay]="i * 25 + 'ms'"
+            [routerLink]="['/developers', dev.id]"
+          >
+            <!-- Radial glow on hover desde el color del primer skill -->
+            @if (dev.developerSkills[0]?.level?.color) {
+              <div
+                class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                [style.background]="'radial-gradient(ellipse at 0% 0%, ' + dev.developerSkills[0].level.color + '12 0%, transparent 65%)'"
+              ></div>
+            }
+
+            <!-- Fila 1: Avatar + Nombre + ML Level -->
+            <div class="flex items-center gap-2.5 relative">
+              <div
+                class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white/90 select-none"
+                [style.background]="avatarGradient(dev.name)"
+              >
+                {{ dev.name.charAt(0).toUpperCase() }}
+              </div>
+              <h3 class="flex-1 text-sm font-medium leading-tight truncate min-w-0">{{ dev.name }}</h3>
+              <span
+                class="shrink-0 tabular-nums text-[10px] font-medium tracking-tight"
+                [class]="dev.mlLevel ? 'text-muted-foreground/60' : 'text-muted-foreground/25'"
+                style="font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, monospace"
+              >ML:{{ dev.mlLevel ?? '—' }}</span>
+            </div>
+
+            <!-- Fila 2: Skills visibles + overflow -->
+            <div class="flex items-center gap-1 flex-nowrap overflow-hidden relative">
+              @if (dev.developerSkills.length === 0) {
+                <span class="text-[10px] text-muted-foreground/40">Sin skills</span>
+              } @else {
+                @for (ds of visibleSkills(dev); track ds.id) {
+                  <span
+                    class="inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.75 text-[10px] leading-none"
+                    [class]="ds.skill.priority ? 'font-semibold' : 'font-medium'"
+                    [style.background-color]="ds.level.color + (ds.skill.priority ? '25' : '15')"
+                    [style.color]="ds.level.color"
+                    [style.border]="'1px solid ' + ds.level.color + (ds.skill.priority ? '45' : '25')"
+                    [title]="ds.skill.name + ' · ' + ds.level.name + (ds.skill.priority ? ' · Prioritaria' : '')"
+                  >
+                    @if (ds.skill.priority) {
+                      <span class="text-[8px] leading-none">★</span>
+                    }
+                    {{ skillShortName(ds.skill.name) }}
+                  </span>
+                }
+                @if (overflowCount(dev) > 0) {
+                  <span class="inline-flex shrink-0 items-center rounded px-1.5 py-0.75 text-[10px] font-medium leading-none text-muted-foreground/50 bg-muted/20 border border-border/30">
+                    +{{ overflowCount(dev) }}
+                  </span>
+                }
+              }
+            </div>
+
+            <!-- Fila 3: Barra de distribución por nivel -->
+            @if (dev.developerSkills.length > 0) {
+              <div class="flex rounded-full overflow-hidden h-0.75 gap-0.5 mt-auto">
+                @for (seg of skillDistribution(dev); track seg.color) {
+                  <div
+                    class="h-full rounded-full"
+                    [style.flex]="seg.flex"
+                    [style.background-color]="seg.color"
+                  ></div>
+                }
+              </div>
+            }
+
+          </div>
+        }
+      </div>
+
+      <!-- Paginación -->
+      @if (facade.totalPages() > 1) {
+        <div class="flex items-center justify-center pt-2">
+          <z-pagination
+            [zPageIndex]="facade.currentPage()"
+            [zTotal]="facade.totalPages()"
+            (zPageIndexChange)="facade.onPageChange($event)"
+          />
+        </div>
+      }
+    }
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-border/20 py-4 mt-8">
+    <div class="mx-auto max-w-7xl px-6 flex items-center justify-between gap-4 flex-wrap"
+         style="font-family: ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, monospace">
+
+      <div class="flex items-center gap-2.5 text-[11px] text-muted-foreground/35 select-none">
+        <span class="text-muted-foreground/20 text-base leading-none">›</span>
+        <span>Accenture</span>
+        <span class="text-muted-foreground/15">/</span>
+        <span>Frontend JavaScript</span>
+        <span class="text-muted-foreground/15">/</span>
+        <span>Matriz de Competencias</span>
+      </div>
+
+      <span class="text-[11px] text-muted-foreground/20 tabular-nums">
+        © {{ currentYear }} Accenture
+      </span>
+
+    </div>
+  </footer>
+
+</div>
